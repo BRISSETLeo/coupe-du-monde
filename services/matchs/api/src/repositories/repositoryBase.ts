@@ -1,30 +1,32 @@
-import {IModelBase} from "../models/modelBase";
+import { IModelBase } from "../models/modelBase";
 import * as mysql from "mysql2/promise";
 import Database from "../config/database";
-import {ResultSetHeader} from "mysql2/promise";
+import { ResultSetHeader } from "mysql2/promise";
 
-export abstract class RepositoryBase <T extends IModelBase> {
+export abstract class RepositoryBase<T extends IModelBase> {
 
     protected db: mysql.Connection | null = null;
     protected readonly table: string;
 
-    protected constructor(tableName: string){
-        // get mysql instance
-        Database.getMysqlInstance()
-            .then((res) => {
-            this.db = res;
-        })
+    protected constructor(tableName: string) {
         this.table = tableName;
     }
 
+    protected async getDb(): Promise<mysql.Connection> {
+        if (!this.db) {
+            this.db = await Database.getMysqlInstance();
+        }
+        return this.db;
+    }
+
     public async create(data: Partial<T>): Promise<T> {
-        if (!this.db) throw new Error('db cannot be null');
+        const db = await this.getDb();
         try {
             const keys = Object.keys(data).join(', ');
             const values = Object.values(data);
             const placeholders = values.map(() => '?').join(', ');
 
-            const [result] = await this.db.execute<ResultSetHeader>(
+            const [result] = await db.execute<ResultSetHeader>(
                 `INSERT INTO ${this.table} (${keys}) VALUES (${placeholders})`,
                 values
             );
@@ -35,29 +37,29 @@ export abstract class RepositoryBase <T extends IModelBase> {
         }
     }
 
-    public async getList(): Promise<T[]>{
-        if (!this.db) throw new Error('db cannot be null')
+    public async getList(): Promise<T[]> {
+        const db = await this.getDb();
         try {
-            const [results, fields] = await this.db.query(`SELECT * FROM ${this.table};`)
+            const [results, fields] = await db.query(`SELECT * FROM ${this.table};`)
             return results as unknown as T[];
-        } catch (e){
+        } catch (e) {
             throw e;
         }
     }
 
-    public async getOne(id: number): Promise<T | null>{
-        if (!this.db) throw new Error('db cannot be null')
+    public async getOne(id: number): Promise<T | null> {
+        const db = await this.getDb();
         try {
-            const [results, fields] = await this.db.query(`SELECT * FROM ${this.table} WHERE id=${id};`)
+            const [results, fields] = await db.query(`SELECT * FROM ${this.table} WHERE id=${id};`)
             if (Array.isArray(results) && results.length == 1) return results[0] as T;
             return null;
-        } catch (e){
+        } catch (e) {
             throw e;
         }
     }
 
     public async update(id: number, data: Partial<T>): Promise<T | null> {
-        if (!this.db) throw new Error('db cannot be null');
+        const db = await this.getDb();
         try {
             const keys = Object.keys(data);
             const values = Object.values(data);
@@ -66,7 +68,7 @@ export abstract class RepositoryBase <T extends IModelBase> {
 
             const queryValues = [...values, id];
 
-            const [result] = await this.db.execute<ResultSetHeader>(
+            const [result] = await db.execute<ResultSetHeader>(
                 `UPDATE ${this.table} SET ${setClause} WHERE id = ?`,
                 queryValues
             );
@@ -79,9 +81,9 @@ export abstract class RepositoryBase <T extends IModelBase> {
     }
 
     public async delete(id: number): Promise<boolean> {
-        if (!this.db) throw new Error('db cannot be null');
+        const db = await this.getDb();
         try {
-            const [result] = await this.db.execute<ResultSetHeader>(
+            const [result] = await db.execute<ResultSetHeader>(
                 `DELETE FROM ${this.table} WHERE id = ?`,
                 [id]
             );

@@ -1,0 +1,202 @@
+### Variables
+@baseUrl = http://localhost:3000/api
+
+###############################################
+# AUTHENTIFICATION - Génération de tokens de test
+###############################################
+
+### POST - Générer un token ADMIN
+# @name loginAdmin
+POST {{baseUrl}}/auth/generate-token
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "email": "admin@example.com",
+  "role": "admin"
+}
+
+### POST - Générer un token USER
+# @name loginUser
+POST {{baseUrl}}/auth/generate-token
+Content-Type: application/json
+
+{
+  "userId": 2,
+  "email": "user@example.com",
+  "role": "user"
+}
+
+###############################################
+# TEAMS - Routes Publiques (GET)
+###############################################
+
+### GET - Récupérer toutes les équipes (Public)
+GET {{baseUrl}}/teams
+Content-Type: application/json
+
+### GET - Récupérer une équipe par ID (Public)
+GET {{baseUrl}}/teams/1
+Content-Type: application/json
+
+###############################################
+# TEAMS - Routes Protégées (Admin uniquement)
+###############################################
+
+### POST - Créer une équipe (SANS TOKEN - devrait échouer)
+POST {{baseUrl}}/teams
+Content-Type: application/json
+
+{
+  "name": "Portugal",
+  "country": "Portugal",
+  "logo": "https://example.com/portugal.png"
+}
+
+### POST - Créer une équipe (AVEC TOKEN ADMIN - devrait réussir)
+POST {{baseUrl}}/teams
+Content-Type: application/json
+Authorization: Bearer {{loginAdmin.response.body.token}}
+
+{
+  "name": "Portugal",
+  "country": "Portugal",
+  "logo": "https://example.com/portugal.png"
+}
+
+### POST - Créer une équipe (AVEC TOKEN USER - devrait échouer)
+POST {{baseUrl}}/teams
+Content-Type: application/json
+Authorization: Bearer {{loginUser.response.body.token}}
+
+{
+  "name": "Italie",
+  "country": "Italie",
+  "logo": "https://example.com/italy.png"
+}
+
+### PUT - Modifier une équipe (SANS TOKEN - devrait échouer)
+PUT {{baseUrl}}/teams/1
+Content-Type: application/json
+
+{
+  "name": "France Updated"
+}
+
+### PUT - Modifier une équipe (AVEC TOKEN ADMIN - devrait réussir)
+PUT {{baseUrl}}/teams/1
+Content-Type: application/json
+Authorization: Bearer {{loginAdmin.response.body.token}}
+
+{
+  "name": "France Mise à jour"
+}
+
+### DELETE - Supprimer une équipe (SANS TOKEN - devrait échouer)
+DELETE {{baseUrl}}/teams/5
+
+### DELETE - Supprimer une équipe (AVEC TOKEN ADMIN - devrait réussir)
+DELETE {{baseUrl}}/teams/5
+Authorization: Bearer {{loginAdmin.response.body.token}}
+
+###############################################
+# MATCHS - Routes Publiques (GET)
+###############################################
+
+### GET - Récupérer tous les matchs (Public)
+GET {{baseUrl}}/matchs
+Content-Type: application/json
+
+### GET - Récupérer un match par ID (Public)
+GET {{baseUrl}}/matchs/1
+Content-Type: application/json
+
+###############################################
+# MATCHS - Routes Protégées (Admin uniquement)
+###############################################
+
+### POST - Créer un match (SANS TOKEN - devrait échouer)
+POST {{baseUrl}}/matchs
+Content-Type: application/json
+
+{
+  "team1_id": 1,
+  "team2_id": 2,
+  "match_date": "2025-12-30 18:00:00",
+  "status": "scheduled",
+  "stadium": "Parc des Princes"
+}
+
+### POST - Créer un match (AVEC TOKEN ADMIN - devrait réussir)
+POST {{baseUrl}}/matchs
+Content-Type: application/json
+Authorization: Bearer {{loginAdmin.response.body.token}}
+
+{
+  "team1_id": 1,
+  "team2_id": 2,
+  "match_date": "2025-12-30 18:00:00",
+  "status": "scheduled",
+  "stadium": "Parc des Princes"
+}
+
+### POST - Créer un match (AVEC TOKEN USER - devrait échouer)
+POST {{baseUrl}}/matchs
+Content-Type: application/json
+Authorization: Bearer {{loginUser.response.body.token}}
+
+{
+  "team1_id": 3,
+  "team2_id": 4,
+  "match_date": "2025-12-28 20:00:00",
+  "status": "scheduled",
+  "stadium": "Signal Iduna Park"
+}
+
+### PUT - Modifier un match (SANS TOKEN - devrait échouer)
+PUT {{baseUrl}}/matchs/1
+Content-Type: application/json
+
+{
+  "score1": 3,
+  "score2": 1,
+  "status": "finished"
+}
+
+### PUT - Modifier un match (AVEC TOKEN ADMIN - devrait réussir)
+PUT {{baseUrl}}/matchs/1
+Content-Type: application/json
+Authorization: Bearer {{loginAdmin.response.body.token}}
+
+{
+  "score1": 3,
+  "score2": 1,
+  "status": "finished"
+}
+
+### DELETE - Supprimer un match (SANS TOKEN - devrait échouer)
+DELETE {{baseUrl}}/matchs/2
+
+### DELETE - Supprimer un match (AVEC TOKEN ADMIN - devrait réussir)
+DELETE {{baseUrl}}/matchs/2
+Authorization: Bearer {{loginAdmin.response.body.token}}
+
+###############################################
+# Tests d'erreurs
+###############################################
+
+### GET - Équipe inexistante
+GET {{baseUrl}}/teams/999
+
+### GET - Match inexistant
+GET {{baseUrl}}/matchs/999
+
+### POST - Token invalide
+POST {{baseUrl}}/teams
+Content-Type: application/json
+Authorization: Bearer invalid_token_here
+
+{
+  "name": "Test",
+  "country": "Test"
+}
