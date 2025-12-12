@@ -4,7 +4,6 @@ exports.getUserById = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Vérifier que l'utilisateur accède à ses propres données ou est admin
         if (req.user.id !== parseInt(id) && req.user.role !== 'Admin') {
             return res.status(403).json({ error: 'Accès non autorisé' });
         }

@@ -6,17 +6,14 @@ exports.updateUser = async (req, res) => {
         const { id } = req.params;
         const { email, password, role } = req.body;
 
-        // Vérifier que l'utilisateur modifie ses propres données ou est admin
         if (req.user.id !== parseInt(id) && req.user.role !== 'Admin') {
             return res.status(403).json({ error: 'Accès non autorisé' });
         }
 
-        // Seul un admin peut changer le rôle
         if (role && req.user.role !== 'Admin') {
             return res.status(403).json({ error: 'Seul un admin peut modifier le rôle' });
         }
 
-        // Vérifier si l'utilisateur existe
         const existingUser = await User.findById(id);
         if (!existingUser) {
             return res.status(404).json({ error: 'Utilisateur non trouvé' });

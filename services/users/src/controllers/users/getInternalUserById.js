@@ -1,6 +1,5 @@
 const User = require('../../models/User');
 
-// Controller interne pour auth-service - pas de vérification de permissions
 exports.getInternalUserById = async (req, res) => {
     try {
         const { id } = req.params;

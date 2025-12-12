@@ -9,21 +9,18 @@ exports.loginUser = async (req, res) => {
             return res.status(400).json({ error: 'Email et mot de passe requis' });
         }
 
-        // Trouver l'utilisateur
         const user = await User.findByEmail(email);
 
         if (!user) {
             return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
         }
 
-        // Vérifier le mot de passe
         const validPassword = await bcrypt.compare(password, user.password);
 
         if (!validPassword) {
             return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
         }
 
-        // Retourner les infos utilisateur (sans le mot de passe)
         res.json({
             id: user.id,
             email: user.email,

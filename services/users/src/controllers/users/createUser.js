@@ -9,17 +9,14 @@ exports.createUser = async (req, res) => {
             return res.status(400).json({ error: 'Email et mot de passe requis' });
         }
 
-        // Vérifier si l'utilisateur existe déjà
         const existingUser = await User.findByEmail(email);
 
         if (existingUser) {
             return res.status(400).json({ error: 'Cet email est déjà utilisé' });
         }
 
-        // Hasher le mot de passe
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Créer l'utilisateur
         const user = await User.create(email, hashedPassword, role || 'Guest');
 
         res.status(201).json({

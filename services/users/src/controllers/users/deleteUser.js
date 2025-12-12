@@ -4,7 +4,6 @@ exports.deleteUser = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Vérifier si l'utilisateur existe
         const user = await User.findById(id);
         if (!user) {
             return res.status(404).json({ error: 'Utilisateur non trouvé' });
