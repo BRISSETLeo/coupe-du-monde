@@ -1,0 +1,23 @@
+@baseUrl = http://localhost:4002
+@userId = demo-user-123
+
+### Crédite le solde d'un utilisateur
+POST {{baseUrl}}/payments/credit
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "amount": 25.5
+}
+
+### Débite le solde d'un utilisateur
+POST {{baseUrl}}/payments/debit
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "amount": 10
+}
+
+### Récupère le solde actuel de l'utilisateur
+GET {{baseUrl}}/payments/{{userId}}/balance
