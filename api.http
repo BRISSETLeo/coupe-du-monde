@@ -1,30 +1,54 @@
 ### Variables
 @baseUrl = http://localhost:3000/api
+@adminEmail = admin@example.com
+@adminPassword = Admin123!
+@userEmail = user@example.com
+@userPassword = User123!
 
 ###############################################
-# AUTHENTIFICATION - Génération de tokens de test
+# AUTHENTIFICATION
 ###############################################
 
-### POST - Générer un token ADMIN
-# @name loginAdmin
-POST {{baseUrl}}/auth/generate-token
+### POST - S'inscrire en tant qu'admin
+# @name registerAdmin
+POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
-  "userId": 1,
-  "email": "admin@example.com",
-  "role": "admin"
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}",
+  "role": "Admin"
 }
 
-### POST - Générer un token USER
-# @name loginUser
-POST {{baseUrl}}/auth/generate-token
+### POST - Se connecter en tant qu'admin
+# @name loginAdmin
+POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "userId": 2,
-  "email": "user@example.com",
-  "role": "user"
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+### POST - S'inscrire en tant qu'utilisateur
+# @name registerUser
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{userEmail}}",
+  "password": "{{userPassword}}",
+  "role": "User"
+}
+
+### POST - Se connecter en tant qu'utilisateur
+# @name loginUser
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{userEmail}}",
+  "password": "{{userPassword}}"
 }
 
 ###############################################
@@ -76,7 +100,7 @@ Authorization: Bearer {{loginUser.response.body.token}}
 }
 
 ### PUT - Modifier une équipe (SANS TOKEN - devrait échouer)
-PUT {{baseUrl}}/teams/1
+PUT {{baseUrl}}/teams/5
 Content-Type: application/json
 
 {
@@ -89,7 +113,7 @@ Content-Type: application/json
 Authorization: Bearer {{loginAdmin.response.body.token}}
 
 {
-  "name": "France Mise à jour"
+  "name": "France Équipe Nationale"
 }
 
 ### DELETE - Supprimer une équipe (SANS TOKEN - devrait échouer)
@@ -182,6 +206,31 @@ DELETE {{baseUrl}}/matchs/2
 Authorization: Bearer {{loginAdmin.response.body.token}}
 
 ###############################################
+# USERS - Routes Utilisateurs
+###############################################
+
+### GET - Récupérer tous les utilisateurs (Admin)
+GET {{baseUrl}}/users
+Authorization: Bearer {{loginAdmin.response.body.token}}
+
+### GET - Récupérer un utilisateur par ID
+GET {{baseUrl}}/users/1
+Authorization: Bearer {{loginAdmin.response.body.token}}
+
+### PUT - Modifier son profil
+PUT {{baseUrl}}/users/1
+Content-Type: application/json
+Authorization: Bearer {{loginAdmin.response.body.token}}
+
+{
+  "email": "admin.updated@example.com"
+}
+
+### DELETE - Supprimer un utilisateur (Admin)
+DELETE {{baseUrl}}/users/2
+Authorization: Bearer {{loginAdmin.response.body.token}}
+
+###############################################
 # Tests d'erreurs
 ###############################################
 
@@ -200,3 +249,6 @@ Authorization: Bearer invalid_token_here
   "name": "Test",
   "country": "Test"
 }
+
+### GET - Health check de l'API Gateway
+GET http://localhost:3000/health
