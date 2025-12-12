@@ -1,0 +1,98 @@
+### ============================================
+### VARIABLES
+### ============================================
+@gatewayBase = http://localhost:3000
+
+### ============================================
+### 1. S'ENREGISTRER
+### ============================================
+# @name register
+POST {{gatewayBase}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "payments-user@test.com",
+  "password": "password123",
+  "role": "Guest"
+}
+
+### ============================================
+### 2. SE CONNECTER
+### ============================================
+# @name login
+POST {{gatewayBase}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "payments-user@test.com",
+  "password": "password123"
+}
+
+### ============================================
+### 3. VÉRIFIER LE TOKEN
+### ============================================
+POST {{gatewayBase}}/api/auth/verify
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.token}}
+
+### ============================================
+### 4. CRÉDITER LE SOLDE VIA USERS SERVICE
+### ============================================
+POST {{gatewayBase}}/api/users/{{login.response.body.user.id}}/payments/credit
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.token}}
+
+{
+  "amount": 100
+}
+
+### ============================================
+### 5. CONSULTER LE SOLDE VIA USERS SERVICE
+### ============================================
+GET {{gatewayBase}}/api/users/{{login.response.body.user.id}}/payments/balance
+Authorization: Bearer {{login.response.body.token}}
+
+### ============================================
+### 6. DÉBITER LE SOLDE VIA USERS SERVICE
+### ============================================
+POST {{gatewayBase}}/api/users/{{login.response.body.user.id}}/payments/debit
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.token}}
+
+{
+  "amount": 25
+}
+
+### ============================================
+### 7. CONSULTER LE SOLDE APRÈS DÉBIT
+### ============================================
+GET {{gatewayBase}}/api/users/{{login.response.body.user.id}}/payments/balance
+Authorization: Bearer {{login.response.body.token}}
+
+### ============================================
+### 8. CRÉDITER À NOUVEAU
+### ============================================
+POST {{gatewayBase}}/api/users/{{login.response.body.user.id}}/payments/credit
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.token}}
+
+{
+  "amount": 50
+}
+
+### ============================================
+### 9. DÉBITER UNE PETITE SOMME
+### ============================================
+POST {{gatewayBase}}/api/users/{{login.response.body.user.id}}/payments/debit
+Content-Type: application/json
+Authorization: Bearer {{login.response.body.token}}
+
+{
+  "amount": 10
+}
+
+### ============================================
+### 10. VÉRIFIER LE SOLDE FINAL
+### ============================================
+GET {{gatewayBase}}/api/users/{{login.response.body.user.id}}/payments/balance
+Authorization: Bearer {{login.response.body.token}}
