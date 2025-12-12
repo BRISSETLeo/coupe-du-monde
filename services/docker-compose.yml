@@ -1,0 +1,32 @@
+services:
+  api:
+    build: ./api
+    container_name: service_matchs_api
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./api/.env
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npm run start
+
+  db:
+    image: mysql:8.0
+    container_name: service_matchs_db
+    restart: always
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    env_file:
+      - ./db/.env
+    ports:
+      - "3307:3306"
+    volumes:
+      - service_matchs_data:/var/lib/mysql
+
+volumes:
+  service_matchs_data:
