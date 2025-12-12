@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS bets (
                                       team_id INT NOT NULL,
                                       bet_type ENUM('victory', 'defeat', 'draw') DEFAULT 'victory',
                                       cote FLOAT NOT NULL,
-                                      bet_ammount FLOAT NOT NULL,
+                                      bet_ammount FLOAT NOT NULL CHECK (bet_ammount >= 1 AND bet_ammount <= 1000),
                                       status ENUM('in_progress', 'lost', 'won', 'cancelled') DEFAULT 'in_progress',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
