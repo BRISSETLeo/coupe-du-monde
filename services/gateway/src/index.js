@@ -96,6 +96,64 @@ app.use('/api/payments', createProxyMiddleware({
     }
 }));
 
+// Route vers le service Matchs
+app.use('/api/matchs', createProxyMiddleware({
+    target: process.env.MATCHS_SERVICE_URL,
+    changeOrigin: true,
+    pathRewrite: {
+        '^/api/matchs': '/api/matchs'
+    },
+    onProxyReq: (proxyReq, req, res) => {
+        console.log(`[Matchs Proxy] ${req.method} ${req.url} -> ${proxyReq.path}`);
+
+        // Transférer l'Authorization header
+        if (req.headers.authorization) {
+            proxyReq.setHeader('Authorization', req.headers.authorization);
+        }
+
+        // Transférer le body pour PUT/POST/PATCH
+        if (req.body && ['POST', 'PUT', 'PATCH'].includes(req.method)) {
+            const bodyData = JSON.stringify(req.body);
+            proxyReq.setHeader('Content-Type', 'application/json');
+            proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
+            proxyReq.write(bodyData);
+        }
+    },
+    onError: (err, req, res) => {
+        console.error('Erreur proxy matchs:', err.message);
+        res.status(500).json({ error: 'Service matchs indisponible' });
+    }
+}));
+
+// Route vers le service Teams (partie de matchs)
+app.use('/api/teams', createProxyMiddleware({
+    target: process.env.MATCHS_SERVICE_URL,
+    changeOrigin: true,
+    pathRewrite: {
+        '^/api/teams': '/api/teams'
+    },
+    onProxyReq: (proxyReq, req, res) => {
+        console.log(`[Teams Proxy] ${req.method} ${req.url} -> ${proxyReq.path}`);
+
+        // Transférer l'Authorization header
+        if (req.headers.authorization) {
+            proxyReq.setHeader('Authorization', req.headers.authorization);
+        }
+
+        // Transférer le body pour PUT/POST/PATCH
+        if (req.body && ['POST', 'PUT', 'PATCH'].includes(req.method)) {
+            const bodyData = JSON.stringify(req.body);
+            proxyReq.setHeader('Content-Type', 'application/json');
+            proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
+            proxyReq.write(bodyData);
+        }
+    },
+    onError: (err, req, res) => {
+        console.error('Erreur proxy teams:', err.message);
+        res.status(500).json({ error: 'Service teams indisponible' });
+    }
+}));
+
 // Route par défaut
 app.use('*', (req, res) => {
     res.status(404).json({
@@ -108,7 +166,17 @@ app.use('*', (req, res) => {
             'GET /api/users/:id',
             'PUT /api/users/:id',
             'DELETE /api/users/:id',
-            'ANY /api/payments/*'
+            'ANY /api/payments/*',
+            'GET /api/teams',
+            'GET /api/teams/:id',
+            'POST /api/teams (Admin)',
+            'PUT /api/teams/:id (Admin)',
+            'DELETE /api/teams/:id (Admin)',
+            'GET /api/matchs',
+            'GET /api/matchs/:id',
+            'POST /api/matchs (Admin)',
+            'PUT /api/matchs/:id (Admin)',
+            'DELETE /api/matchs/:id (Admin)'
         ]
     });
 });
@@ -118,4 +186,5 @@ app.listen(PORT, () => {
     console.log(`Proxying auth to: ${process.env.AUTH_SERVICE_URL}`);
     console.log(`Proxying users to: ${process.env.USERS_SERVICE_URL}`);
     console.log(`Proxying payments to: ${process.env.PAYMENTS_SERVICE_URL}`);
+    console.log(`Proxying matchs/teams to: ${process.env.MATCHS_SERVICE_URL}`);
 });
