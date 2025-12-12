@@ -1,0 +1,219 @@
+### ============================================
+### TEST AUTH SERVICE (Direct - Port 4000)
+### ============================================
+
+### 1. Health Check Auth Service
+GET http://localhost:4000/health
+
+### 2. Register - Créer un utilisateur Guest
+POST http://localhost:4000/auth/register
+Content-Type: application/json
+
+{
+  "email": "user@test.com",
+  "password": "password123"
+}
+
+### 3. Register - Créer un Admin
+POST http://localhost:4000/auth/register
+Content-Type: application/json
+
+{
+  "email": "admin@test.com",
+  "password": "admin123",
+  "role": "Admin"
+}
+
+### 4. Login - Se connecter avec le Guest
+# @name loginGuest
+POST http://localhost:4000/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@test.com",
+  "password": "password123"
+}
+
+### 5. Login - Se connecter avec l'Admin
+# @name loginAdmin
+POST http://localhost:4000/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@test.com",
+  "password": "admin123"
+}
+
+### 6. Verify Token - Vérifier le token Guest
+POST http://localhost:4000/auth/verify
+Authorization: Bearer {{loginGuest.response.body.token}}
+
+### 7. Verify Token - Vérifier le token Admin
+POST http://localhost:4000/auth/verify
+Authorization: Bearer {{loginAdmin.response.body.token}}
+
+### 8. Verify Token - Sans token (doit échouer)
+POST http://localhost:4000/auth/verify
+
+### 9. Verify Token - Avec token invalide (doit échouer)
+POST http://localhost:4000/auth/verify
+Authorization: Bearer invalid_token_here
+
+
+### ============================================
+### TEST USERS SERVICE (Direct - Port 4001) - DOIT ÊTRE BLOQUÉ
+### ============================================
+
+### 10. Health Check Users Service
+GET http://localhost:4001/health
+
+### 11. Get All Users - Sans token (doit échouer 401)
+GET http://localhost:4001/users
+
+### 12. Get All Users - Avec token Guest (doit échouer 403 - Admin requis)
+GET http://localhost:4001/users
+Authorization: Bearer {{loginGuest.response.body.token}}
+
+### 13. Get All Users - Avec token Admin (doit réussir)
+GET http://localhost:4001/users
+Authorization: Bearer {{loginAdmin.response.body.token}}
+
+### 14. Get User By ID - Sans token (doit échouer 401)
+GET http://localhost:4001/users/1
+
+### 15. Get User By ID - Avec token Guest (accès à ses propres données)
+GET http://localhost:4001/users/1
+Authorization: Bearer {{loginGuest.response.body.token}}
+
+### 16. Update User - Sans token (doit échouer 401)
+PUT http://localhost:4001/users/1
+Content-Type: application/json
+
+{
+  "email": "newemail@test.com"
+}
+
+### 17. Update User - Avec token Guest
+PUT http://localhost:4001/users/1
+Content-Type: application/json
+Authorization: Bearer {{loginGuest.response.body.token}}
+
+{
+  "email": "updated@test.com"
+}
+
+### 18. Delete User - Sans token (doit échouer 401)
+DELETE http://localhost:4001/users/1
+
+### 19. Delete User - Avec token Guest (doit échouer 403 - Admin requis)
+DELETE http://localhost:4001/users/1
+Authorization: Bearer {{loginGuest.response.body.token}}
+
+### 20. Delete User - Avec token Admin (doit réussir)
+DELETE http://localhost:4001/users/1
+Authorization: Bearer {{loginAdmin.response.body.token}}
+
+
+### ============================================
+### TEST API GATEWAY (Port 3000) - POINT D'ENTRÉE PUBLIC
+### ============================================
+
+### 21. Health Check Gateway
+GET http://localhost:3000/health
+
+### 22. Register via Gateway
+POST http://localhost:3000/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "gateway-user@test.com",
+  "password": "password123"
+}
+
+### 23. Login via Gateway
+# @name gatewayLogin
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "gateway-user@test.com",
+  "password": "password123"
+}
+
+### 3. Register - Créer un Admin
+POST http://localhost:3000/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "admin@test.com",
+  "password": "admin123",
+  "role": "Admin"
+}
+
+### 24. Verify Token via Gateway
+POST http://localhost:3000/api/auth/verify
+Authorization: Bearer {{gatewayLogin.response.body.token}}
+
+### 25. Get All Users via Gateway - Sans token (doit échouer)
+GET http://localhost:3000/api/users
+Authorization: Bearer {{{{gatewayLogin.response.body.token}}}}
+
+### 26. Get All Users via Gateway - Avec token Admin
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@test.com",
+  "password": "admin123"
+}
+
+### 27. Login Admin via Gateway
+# @name gatewayAdminLogin
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@test.com",
+  "password": "admin123"
+}
+
+### 27. Get All Users via Gateway avec Admin token
+GET http://localhost:3000/api/users
+Authorization: Bearer {{gatewayAdminLogin.response.body.token}}
+
+### 28. Get User By ID via Gateway
+GET http://localhost:3000/api/users/1
+Authorization: Bearer {{gatewayLogin.response.body.token}}
+
+### 29. Update User via Gateway
+PUT http://localhost:3000/api/users/5
+Content-Type: application/json
+Authorization: Bearer {{gatewayLogin.response.body.token}}
+
+{
+  "email": "updated-via-gateway@test.com"
+}
+
+### 30. Delete User via Gateway - Admin requis
+DELETE http://localhost:3000/api/users/5
+Authorization: Bearer {{gatewayAdminLogin.response.body.token}}
+
+
+### ============================================
+### TEST ACCÈS DIRECT AUX SERVICES (DOIT ÉCHOUER)
+### ============================================
+
+### 31. Tenter d'accéder à RabbitMQ (port fermé - doit échouer)
+GET http://localhost:5672
+
+### 32. Tenter d'accéder à MySQL (port fermé - doit échouer)
+GET http://localhost:3306
+
+### 33. Route non existante - Gateway
+GET http://localhost:3000/api/nonexistent
+
+### 34. Route non existante - Auth Service
+GET http://localhost:4000/nonexistent
+
+### 35. Route non existante - Users Service
+GET http://localhost:4001/nonexistent
